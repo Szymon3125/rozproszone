@@ -12,9 +12,9 @@ void mainLoop()
 	    case InRun: 
 		perc = random()%100;
 		if ( perc < 25 ) {
-			pthread_mutex_lock(&lamport_lock);
-			lamport++;
-			pthread_mutex_unlock(&lamport_lock);
+			// pthread_mutex_lock(&lamport_lock);
+			// lamport++;
+			// pthread_mutex_unlock(&lamport_lock);
 		    debug("Perc: %d", perc);
 		    println("Ubiegam się o sekcję krytyczną z zegarem %d", lamport)
 		    debug("Zmieniam stan na wysyłanie");
@@ -35,7 +35,7 @@ void mainLoop()
 		debug("Skończyłem myśleć");
 		break;
 	    case InWant:
-		println("Czekam na wejście do sekcji krytycznej")
+		println("Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
 		if ( ackCount == size - 1) 
