@@ -13,8 +13,12 @@ void *startKomWatek(void *ptr)
         MPI_Recv( &pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
         switch ( status.MPI_TAG ) {
 	    case REQUEST: 
-                debug("Ktoś coś prosi. A niech ma!")
-		sendPacket( 0, status.MPI_SOURCE, ACK );
+                debug("Ktoś coś prosi (z zegarem %d). Ja mam %d. Czy ubiegam się o dostęp? %d", pakiet.ts, lamport, stan == InWant);
+                if (pakiet.ts < lamport) {
+		            sendPacket( 0, status.MPI_SOURCE, ACK );
+                } else {
+                    
+                }
 	    break;
 	    case ACK: 
                 debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, ackCount);
@@ -23,5 +27,8 @@ void *startKomWatek(void *ptr)
 	    default:
 	    break;
         }
+        pthread_mutex_lock(&lamport_lock);
+        lamport = lamport < pakiet.ts ? pakiet.ts + 1 : lamport + 1;
+        pthread_mutex_unlock(&lamport_lock);
     }
 }

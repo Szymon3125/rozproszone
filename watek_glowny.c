@@ -12,8 +12,11 @@ void mainLoop()
 	    case InRun: 
 		perc = random()%100;
 		if ( perc < 25 ) {
+			pthread_mutex_lock(&lamport_lock);
+			lamport++;
+			pthread_mutex_unlock(&lamport_lock);
 		    debug("Perc: %d", perc);
-		    println("Ubiegam się o sekcję krytyczną")
+		    println("Ubiegam się o sekcję krytyczną z zegarem %d", lamport)
 		    debug("Zmieniam stan na wysyłanie");
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;

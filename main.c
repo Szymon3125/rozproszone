@@ -13,6 +13,8 @@
  */
 int rank, size;
 int ackCount = 0;
+int lamport = 0;
+pthread_mutex_t lamport_lock;
 /* 
  * Każdy proces ma dwa wątki - główny i komunikacyjny
  * w plikach, odpowiednio, watek_glowny.c oraz (siurpryza) watek_komunikacyjny.c
@@ -59,6 +61,13 @@ void check_thread_support(int provided)
 
 int main(int argc, char **argv)
 {
+    // inicjalizacja mutexów
+    if (pthread_mutex_init(&lamport_lock, NULL) != 0)
+    {
+        printf("\n mutex init failed\n");
+        return 1;
+    }
+    
     MPI_Status status;
     int provided;
     MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
