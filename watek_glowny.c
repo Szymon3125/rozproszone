@@ -15,8 +15,8 @@ void mainLoop()
 			// pthread_mutex_lock(&lamport_lock);
 			// lamport++;
 			// pthread_mutex_unlock(&lamport_lock);
-		    debug("Perc: %d", perc);
-		    println("Ubiegam się o sekcję krytyczną z zegarem %d", lamport)
+		    // debug("Perc: %d", perc);
+		    printlnLamport(lamport, "Ubiegam się o sekcję krytyczną")
 		    debug("Zmieniam stan na wysyłanie");
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
@@ -35,7 +35,7 @@ void mainLoop()
 		debug("Skończyłem myśleć");
 		break;
 	    case InWant:
-		println("Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
+		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
 		if ( ackCount == size - 1) 
@@ -43,19 +43,20 @@ void mainLoop()
 		break;
 	    case InSection:
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
-		println("Jestem w sekcji krytycznej")
+		printlnLamport(lamport, "Jestem w sekcji krytycznej")
 		    sleep(5);
 		//if ( perc < 25 ) {
-		    debug("Perc: %d", perc);
-		    println("Wychodzę z sekcji krytyczneh")
+		    // debug("Perc: %d", perc);
+		    printlnLamport(lamport, "Wychodzę z sekcji krytyczneh")
 		    debug("Zmieniam stan na wysyłanie");
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
 		    for (int i=0;i<=size-1;i++)
 			if (i!=rank)
-			    sendPacket( pkt, (rank+1)%size, RELEASE);
+			    sendPacket( pkt, i, RELEASE);
 		    changeState( InRun );
 		    free(pkt);
+			lamport += 100;
 		//}
 		break;
 	    default: 

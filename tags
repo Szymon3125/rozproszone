@@ -8,7 +8,7 @@ ACK	util.h	17;"	d
 APP_PKT	util.h	20;"	d
 FALSE	main.h	14;"	d
 FINISH	util.h	21;"	d
-FLAGS	Makefile	/^FLAGS=-g$/;"	m
+FLAGS	Makefile	/^FLAGS=-DDEBUG -g$/;"	m
 HEADERS	Makefile	/^HEADERS=$(SOURCES:.c=.h)$/;"	m
 InFinish	util.h	/^typedef enum {InRun, InMonitor, InWant, InSection, InFinish} state_t;$/;"	e	enum:__anon2
 InMonitor	util.h	/^typedef enum {InRun, InMonitor, InWant, InSection, InFinish} state_t;$/;"	e	enum:__anon2
@@ -32,15 +32,20 @@ ackCount	main.c	/^int ackCount = 0;$/;"	v
 changeState	util.c	/^void changeState( state_t newState )$/;"	f
 check_thread_support	main.c	/^void check_thread_support(int provided)$/;"	f
 data	util.h	/^    int data;     \/* przykładowe pole z danymi; można zmienić nazwę na bardziej pasującą *\/$/;"	m	struct:__anon1
-debug	main.h	49;"	d
 debug	main.h	51;"	d
+debug	main.h	54;"	d
+debugLamport	main.h	52;"	d
+debugLamport	main.h	55;"	d
 finalizuj	main.c	/^void finalizuj()$/;"	f
 inicjuj_typ_pakietu	util.c	/^void inicjuj_typ_pakietu()$/;"	f
+lamport	main.c	/^int lamport = 0;$/;"	v
+lamport_lock	main.c	/^pthread_mutex_t lamport_lock;$/;"	v
 main	main.c	/^int main(int argc, char **argv)$/;"	f
 mainLoop	watek_glowny.c	/^void mainLoop()$/;"	f
 name	util.c	/^    const char *name;$/;"	m	struct:tagNames_t	file:
 packet_t	util.h	/^} packet_t;$/;"	t	typeref:struct:__anon1
-println	main.h	55;"	d
+println	main.h	59;"	d
+printlnLamport	main.h	60;"	d
 rank	main.c	/^int rank, size;$/;"	v
 sendPacket	util.c	/^void sendPacket(packet_t *pkt, int destination, int tag)$/;"	f
 size	main.c	/^int rank, size;$/;"	v

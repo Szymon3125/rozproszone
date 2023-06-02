@@ -14,7 +14,7 @@ void *startKomWatek(void *ptr)
         switch ( status.MPI_TAG ) {
 	    case REQUEST: 
                 debug("%d prosi o dostęp (z zegarem %d). Ja mam %d. Czy ubiegam się o dostęp? %d", pakiet.src, pakiet.ts, lamport, stan == InWant);
-                if (stan != InSection && (pakiet.ts < lamport || (pakiet.ts == lamport && pakiet.src < rank))) {
+                if (stan != InSection && (stan != InWant || pakiet.ts < lamport || (pakiet.ts == lamport && pakiet.src < rank))) {
 		                sendPacket( 0, status.MPI_SOURCE, ACK );
                 } else {
                     debug("Nie odsyłam ACK do %d!", pakiet.src);
@@ -27,6 +27,7 @@ void *startKomWatek(void *ptr)
 	    break;
         case RELEASE:
             changeState(InRun);
+            ackCount = 0;
             continue; // nie zwiększaj zegara lamporta! w przeciwnym wypadku wszystkie poza jednym procesem zostaną zagłodzone
         break;
 	    default:
