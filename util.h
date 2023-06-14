@@ -19,6 +19,9 @@ typedef struct {
 #define RELEASE 3
 #define APP_PKT 4
 #define FINISH  5
+#define PORTAL_ACK      6
+#define PORTAL_REQUEST  7
+#define PORTAL_RELEASE  8
 
 extern MPI_Datatype MPI_PAKIET_T;
 void inicjuj_typ_pakietu();

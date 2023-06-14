@@ -21,10 +21,11 @@ void mainLoop()
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
 		    ackCount = 0;
+		    changeState( InWant );
 		    for (int i=0;i<=size-1;i++)
 			if (i!=rank)
-			    sendPacket( pkt, i, REQUEST);
-		    changeState( InWant ); // w VI naciśnij ctrl-] na nazwie funkcji, ctrl+^ żeby wrócić
+			    sendPacket( pkt, i, PORTAL_REQUEST);
+					   // w VI naciśnij ctrl-] na nazwie funkcji, ctrl+^ żeby wrócić
 					   // :w żeby zapisać, jeżeli narzeka że w pliku są zmiany
 					   // ewentualnie wciśnij ctrl+w ] (trzymasz ctrl i potem najpierw w, potem ]
 					   // między okienkami skaczesz ctrl+w i strzałki, albo ctrl+ww
@@ -53,7 +54,7 @@ void mainLoop()
 		    pkt->data = perc;
 		    for (int i=0;i<=size-1;i++)
 			if (i!=rank)
-			    sendPacket( pkt, i, RELEASE);
+			    sendPacket( pkt, i, PORTAL_RELEASE);
 		    changeState( InRun );
 		    free(pkt);
 			lamport += 100;

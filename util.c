@@ -19,7 +19,7 @@ struct tagNames_t{
     const char *name;
     int tag;
 } tagNames[] = { { "pakiet aplikacyjny", APP_PKT }, { "finish", FINISH}, 
-                { "potwierdzenie", ACK}, {"prośbę o sekcję krytyczną", REQUEST}, {"zwolnienie sekcji krytycznej", RELEASE} };
+                { "potwierdzenie", PORTAL_ACK}, {"prośbę o sekcję krytyczną", PORTAL_REQUEST}, {"zwolnienie sekcji krytycznej", PORTAL_RELEASE} };
 
 const char *const tag2string( int tag )
 {

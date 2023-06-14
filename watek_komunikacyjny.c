@@ -12,32 +12,35 @@ void *startKomWatek(void *ptr)
 	debug("czekam na recv");
     MPI_Recv( &pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
     switch ( status.MPI_TAG ) {
-	    case REQUEST: 
+	    case PORTAL_REQUEST: 
+            pthread_mutex_lock(&lamport_lock);
+            pthread_mutex_lock(&stateMut);
             debug("%d prosi o dostęp (z zegarem %d). Ja mam %d. Czy ubiegam się o dostęp? %d", pakiet.src, pakiet.ts, lamport, stan == InWant);
-            if (stan != InSection && (stan != InWant || pakiet.ts < lamport || (pakiet.ts == lamport && pakiet.src < rank))) {
-                pthread_mutex_lock(&lamport_lock);
-                lamport = lamport < pakiet.ts ? pakiet.ts + 1 : lamport + 1; // before sending a new message, lamport update is required
-                pthread_mutex_unlock(&lamport_lock);
-                sendPacket( 0, status.MPI_SOURCE, ACK );
+            int agree = (stan != InSection && (stan != InWant || pakiet.ts < lamport || (pakiet.ts == lamport && pakiet.src < rank)));
+            if (stan != InWant) lamport = lamport < pakiet.ts ? pakiet.ts + 1 : lamport + 1; // update lamport if process does not care about the critical section
+            pthread_mutex_unlock(&stateMut);
+            pthread_mutex_unlock(&lamport_lock);
+            if (agree) {
+                sendPacket( 0, status.MPI_SOURCE, PORTAL_ACK );
             } else {
-                debug("Nie odsyłam ACK do %d!", pakiet.src);
+                debug("Nie odsyłam PORTAL_ACK do %d!", pakiet.src);
             }
+            
 	    break;
-	    case ACK: 
+	    case PORTAL_ACK: 
 	        ackCount++; /* czy potrzeba tutaj muteksa? Będzie wyścig, czy nie będzie? Zastanówcie się. */
-                debug("Dostałem ACK od %d, mam już %d", status.MPI_SOURCE, ackCount);
+                debug("Dostałem PORTAL_ACK od %d, mam już %d", status.MPI_SOURCE, ackCount);
 
 	    break;
-        case RELEASE:
-            changeState(InRun);
+        case PORTAL_RELEASE:
+            if (stan == InWant) changeState(InRun);
             ackCount = 0;
-            continue; // nie zwiększaj zegara lamporta! w przeciwnym wypadku wszystkie poza jednym procesem zostaną zagłodzone
         break;
 	    default:
 	    break;
         }
-        pthread_mutex_lock(&lamport_lock);
-        lamport = lamport < pakiet.ts ? pakiet.ts + 1 : lamport + 1;
-        pthread_mutex_unlock(&lamport_lock);
+        // pthread_mutex_lock(&lamport_lock);
+        // lamport = lamport < pakiet.ts ? pakiet.ts + 1 : lamport + 1;
+        // pthread_mutex_unlock(&lamport_lock);
     }
 }
