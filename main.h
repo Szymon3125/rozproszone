@@ -28,6 +28,7 @@ extern int ackCount;
 extern pthread_t threadKom;
 extern int lamport;
 extern pthread_mutex_t lamport_lock;
+extern pthread_mutex_t jobs_lock;
 extern int jobs[100];
 extern int jobCount;
 extern int jobLists[16][16];

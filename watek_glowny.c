@@ -15,7 +15,7 @@ void mainLoop()
 	if (rank >= size_k) {
 		int nextJob = rank % size_s + 1;
 		while (1) {
-			sleep(random() % 3);
+			sleep(random() % 3 + 5);
 		    println("Wysylam nowe zlecenie: %d", nextJob);
 		    packet_t *pkt = malloc(sizeof(packet_t));
 			pkt->data = nextJob;
@@ -33,14 +33,16 @@ case InRun:
 		perc = random()%100;
 		if ( perc < 25 ) {
 		    changeState( InWantJob );
-		    printlnLamport(lamport, "Ubiegam się o zlecenie")
+		    printlnLamport(lamport, "Ubiegam się o %d zleceń: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]);
 			allLamports[rank] = lamport; // ? possible race conditions between sendPacket ?
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
+			pthread_mutex_lock(&jobs_lock);
 			for (int i = 0; i < 16; i++) {
 				pkt->jobs[i] = jobs[i];
 				jobLists[rank][i] = jobs[i];
 			} 
+			pthread_mutex_unlock(&jobs_lock);
 		    ackCount = 0;
 		    for (int i=0;i<=size_k-1;i++)
 			if (i!=rank)
@@ -94,12 +96,14 @@ case InWantJob:
 						}
 					}
 					// debug("%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+					pthread_mutex_lock(&jobs_lock);
 					for (int i = 0; i < jobCount; i++) {
 						if (jobs[i] == job)
 							for (int j = i; j < jobCount + 1; j++)
 								jobs[j] = jobs[j + 1];
 					}
 					jobCount--;
+					pthread_mutex_unlock(&jobs_lock);
 					for (int i = 0; i < 16; i++) {
 						jobLists[minLamportId][i] = 0;
 					}

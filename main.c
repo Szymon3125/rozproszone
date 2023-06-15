@@ -20,14 +20,15 @@ int size_p = 2;     // ilosc portali
 
 int ackCount = 0;
 int lamport = 0;
-int jobs[100] = {1, 2, 3};
-int jobCount = 3;
+int jobs[100] = {0};
+int jobCount = 0;
 
 int askedForJobs[16] = {0};
 int jobLists[16][16];
 int allLamports[16];
 
 pthread_mutex_t lamport_lock;
+pthread_mutex_t jobs_lock;
 /* 
  * Każdy proces ma dwa wątki - główny i komunikacyjny
  * w plikach, odpowiednio, watek_glowny.c oraz (siurpryza) watek_komunikacyjny.c
