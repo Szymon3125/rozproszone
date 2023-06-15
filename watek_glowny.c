@@ -3,7 +3,7 @@
 
 void mainLoop()
 {
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < size_k; i++) {
         allLamports[i] = -1; // clear lamports
         for (int j = 0; j < 16; j++)
             jobLists[i][j] = 0; // clear job lists
@@ -106,7 +106,7 @@ case InWantJob:
 		}
 break;
 case InWantPortal:
-		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
+		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - 1)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
 		if ( ackCount == size_k - 1) 
