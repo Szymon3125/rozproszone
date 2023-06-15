@@ -12,15 +12,20 @@ void mainLoop()
 	    case InRun: 
 		perc = random()%100;
 		if ( perc < 25 ) {
-			// pthread_mutex_lock(&lamport_lock);
-			// lamport++;
-			// pthread_mutex_unlock(&lamport_lock);
-		    // debug("Perc: %d", perc);
-		    printlnLamport(lamport, "Ubiegam się o pracę")
-		    debug("Zmieniam stan na wysyłanie");
+			for (int i = 0; i < size; i++) {
+				allLamports[i] = -1; // clear lamports
+				for (int j = 0; j < 16; j++)
+					jobLists[i][j] = 0; // clear job lists
+			}
+		    printlnLamport(lamport, "Ubiegam się o zlecenie")
+			allLamports[rank] = lamport; // ? possible race conditions between sendPacket ?
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
-			for (int i=0;i<=min(jobCount, 16);i++) { pkt->jobs[i] = jobs[i]; } // sending max 16 jobs i want to do
+			for (int i=0;i < min(jobCount, 16);i++) {
+				pkt->jobs[i] = jobs[i];
+				// jobLists[rank][i] = jobs[i];
+				println("pkt->jobs[%d] = %d\n", i, pkt->jobs[i]);
+			} 
 		    ackCount = 0;
 		    changeState( InWantJob );
 		    for (int i=0;i<=size-1;i++)
@@ -33,6 +38,8 @@ void mainLoop()
 		case InWantJob:
 		debug("Chcę pracować");
 		// TODO: warunek na pracę - zgoda od wszystkich pozostałych które zadanie mogę wykonać
+		if ( ackCount == size - 1) 
+		    changeState( InRun ); 
 		if ( 0 ) {
 		    printlnLamport(lamport, "Ubiegam się o portal")
 		    packet_t *pkt = malloc(sizeof(packet_t));
@@ -43,6 +50,8 @@ void mainLoop()
 			if (i!=rank)
 			    sendPacket( pkt, i, PORTAL_REQUEST);
 		    free(pkt);
+			free(jobLists);
+			free(allLamports);
 		}
 		break;
 	    case InWantPortal:

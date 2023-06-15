@@ -36,8 +36,12 @@ void *startKomWatek(void *ptr)
             ackCount = 0;
         break;
         case JOB_REQUEST:
-            debug("%d prosi o pracę (z zegarem %d). Ja mam %d. Czy ubiegam się o pracę? %d", pakiet.src, pakiet.ts, lamport, stan == InWantJob);
-            // TODO: porównać jobs[100] z pakiet.jobs[16]
+            if (allLamports[pakiet.src] == -1) {
+                printlnLamport(lamport, "ERR: Dostałem KOLEJNY RAZ prośbę o pracę od %d", pakiet.src);
+            }
+            allLamports[pakiet.src] = pakiet.ts;
+            for (int i = 0; i < 16; i++) { jobLists[pakiet.src][i] = pakiet.jobs[i]; }
+            debugLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
 	    default:
 	    break;
         }
