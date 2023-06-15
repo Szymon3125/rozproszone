@@ -36,8 +36,8 @@ void *startKomWatek(void *ptr)
             ackCount = 0;
         break;
         case JOB_REQUEST:
-            if (allLamports[pakiet.src] == -1) {
-                printlnLamport(lamport, "ERR: Dostałem KOLEJNY RAZ prośbę o pracę od %d", pakiet.src);
+            if (allLamports[pakiet.src] != -1) {
+                printlnLamport(lamport, "ERR: Dostałem KOLEJNY RAZ prośbę o pracę od %d, mam już lamporta tego procesu: %d", pakiet.src, allLamports[pakiet.src]);
             }
             allLamports[pakiet.src] = pakiet.ts;
             for (int i = 0; i < 16; i++) { jobLists[pakiet.src][i] = pakiet.jobs[i]; }

@@ -73,11 +73,6 @@ int main(int argc, char **argv)
         printf("\n mutex init failed\n");
         return 1;
     }
-    for (int i = 0; i < size; i++) {
-        allLamports[i] = -1; // clear lamports
-        for (int j = 0; j < 16; j++)
-            jobLists[i][j] = 0; // clear job lists
-    }
     
     MPI_Status status;
     int provided;
