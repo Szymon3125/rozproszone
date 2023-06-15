@@ -27,6 +27,8 @@ extern int lamport;
 extern pthread_mutex_t lamport_lock;
 extern int jobs[100];
 extern int jobCount;
+extern int jobLists[16][16];
+extern int allLamports[16];
 
 
 
