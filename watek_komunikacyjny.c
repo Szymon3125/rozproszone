@@ -9,7 +9,7 @@ void *startKomWatek(void *ptr)
     packet_t pakiet;
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
     
-    if (rank >= size - skanseny) {
+    if (rank >= size_k) {
         return NULL;
     }
 

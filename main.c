@@ -11,12 +11,18 @@
  * ale zob util.c oraz util.h - zmienną state_t state i funkcję changeState
  *
  */
-int rank, size;
-int skanseny = 2;
+
+int rank;           // id procesu
+int size;           // ilosc procesow
+int size_k = 0;     // ilosc krasnali
+int size_s = 2;     // ilosc skansenow
+int size_p = 2;     // ilosc portali
+
 int ackCount = 0;
 int lamport = 0;
 int jobs[100] = {1, 2, 3};
 int jobCount = 3;
+
 int askedForJobs[16] = {0};
 int jobLists[16][16];
 int allLamports[16];
@@ -84,6 +90,9 @@ int main(int argc, char **argv)
     inicjuj_typ_pakietu(); // tworzy typ pakietu
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    size_k = size - size_s;
+
     /* startKomWatek w watek_komunikacyjny.c 
      * w vi najedź kursorem na nazwę pliku i wciśnij klawisze gf
      * powrót po wciśnięciu ctrl+6
