@@ -15,8 +15,8 @@ void mainLoop()
 	if (rank >= size_k) {
 		int nextJob = rank % size_s + 1;
 		while (1) {
-			sleep(random() % 3 + 5);
-		    println("Wysylam nowe zlecenie: %d", nextJob);
+			sleep(random() % 3 + 10);
+		    debug("Wysylam nowe zlecenie: %d", nextJob);
 		    packet_t *pkt = malloc(sizeof(packet_t));
 			pkt->data = nextJob;
 			for (int i = 0; i < size_k; i++) {
@@ -117,6 +117,14 @@ case InWantJob:
 				printlnLamport(lamport, "Mam zlecenie %d", myJob);
 				changeState(InRequestPortal);
 			}
+			// Reset allLamports & jobLists
+			for (int i = 0; i < size_k; i++) {
+				allLamports[i] = -1;
+				for (int j = 0; j < 16; j++)
+					jobLists[i][j] = 0;
+			}
+			// TODO: copy the new job lists from buffer (if any)
+			// TODO: send the empty JOB_REQUEST to those who sent new job lists into the buffer
 		}
 break;
 case InRequestPortal:
@@ -125,9 +133,9 @@ case InRequestPortal:
 		pkt->data = perc;
 		ackCount = 0;
 		changeState( InWantPortal );
-		for (int i = 0; i <= size_k - size_p; i++)
-		if (i!=rank)
-			sendPacket( pkt, i, PORTAL_REQUEST);
+		for (int i = 0; i <= size_k; i++)
+			if (i!=rank)
+				sendPacket( pkt, i, PORTAL_REQUEST);
 		free(pkt);
 		for (int i = 0; i < size_k; i++) {
 			allLamports[i] = -1; // clear lamports
@@ -136,10 +144,10 @@ case InRequestPortal:
 		}
 break;
 case InWantPortal:
-		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - 1)
+		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - size_p)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
-		if ( ackCount == size_k - 1) 
+		if ( ackCount >= size_k - size_p) 
 		    changeState(InSection);
 		break;
 	    case InSection:
@@ -148,7 +156,7 @@ case InWantPortal:
 		    sleep(5);
 		//if ( perc < 25 ) {
 		    // debug("Perc: %d", perc);
-		    printlnLamport(lamport, "Wychodzę z sekcji krytyczneh")
+		    printlnLamport(lamport, "Wychodzę z sekcji krytycznej")
 		    debug("Zmieniam stan na wysyłanie");
 		    pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;

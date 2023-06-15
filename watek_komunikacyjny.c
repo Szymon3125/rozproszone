@@ -41,14 +41,25 @@ void *startKomWatek(void *ptr)
             ackCount = 0;
         break;
         case JOB_REQUEST:
+            if (stan != InWantJob && stan != InRun) {
+                // jeśli w innym stanie niż oczekujący na zlecenia, początkowym, odpowiedz pustym pakietem
+                packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
+                for (int i = 0; i < 16; i++) pkt->jobs[i] = 0;
+                sendPacket(pkt, pakiet.src, JOB_REQUEST);
+                free(pkt);
+                break;
+            }
+
             if (allLamports[pakiet.src] != -1) {
                 printlnLamport(lamport, "ERR: Dostałem KOLEJNY RAZ prośbę o pracę od %d, mam już lamporta tego procesu: %d", pakiet.src, allLamports[pakiet.src]);
+                // TODO: store this job list in a buffer
+                
             }
             allLamports[pakiet.src] = pakiet.ts;
             for (int i = 0; i < 16; i++) { jobLists[pakiet.src][i] = pakiet.jobs[i]; }
             debugLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
 	    case NEW_JOB:
-            println("Dostałem nowe zlecenie: %d", pakiet.data);
+            debug("Dostałem nowe zlecenie: %d", pakiet.data);
             pthread_mutex_lock(&jobs_lock);
             jobs[jobCount] = pakiet.data;
             jobCount++;
