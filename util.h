@@ -24,6 +24,9 @@ typedef struct {
 #define PORTAL_RELEASE  8
 #define JOB_REQUEST     9
 
+// nowe zlecenie wysylane przez skansen
+#define NEW_JOB         10
+
 extern MPI_Datatype MPI_PAKIET_T;
 void inicjuj_typ_pakietu();
 

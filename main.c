@@ -12,6 +12,7 @@
  *
  */
 int rank, size;
+int skanseny = 2;
 int ackCount = 0;
 int lamport = 0;
 int jobs[100] = {1, 2, 3};

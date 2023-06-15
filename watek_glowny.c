@@ -7,6 +7,20 @@ void mainLoop()
     int tag;
     int perc;
 
+	if (rank >= size - skanseny) {
+		int nextJob = rank % (size - skanseny) + 1;
+		while (1) {
+			sleep(random() % 3);
+		    println("Wysylam nowe zlecenie: %d", nextJob);
+		    packet_t *pkt = malloc(sizeof(packet_t));
+			pkt->data = nextJob;
+			for (int i = 0; i < size - skanseny; i++) {
+				sendPacket(pkt, i, NEW_JOB);
+			}
+			nextJob += skanseny;
+		}
+	}
+
     while (stan != InFinish) {
 	switch (stan) {
 	    case InRun: 
