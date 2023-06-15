@@ -75,3 +75,6 @@ void changeState( state_t newState )
     stan = newState;
     pthread_mutex_unlock( &stateMut );
 }
+
+int min(int a, int b) { return (a < b) ? a : b; }
+int max(int a, int b) { return (a > b) ? a : b; }

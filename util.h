@@ -35,4 +35,6 @@ extern state_t stan;
 extern pthread_mutex_t stateMut;
 /* zmiana stanu, obwarowana muteksem */
 void changeState( state_t );
+int min(int a, int b);
+int max(int a, int b);
 #endif
