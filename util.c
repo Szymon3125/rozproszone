@@ -20,7 +20,7 @@ struct tagNames_t{
     int tag;
 } tagNames[] = { { "pakiet aplikacyjny", APP_PKT }, { "finish", FINISH}, 
                 { "potwierdzenie", PORTAL_ACK}, {"prośbę o sekcję krytyczną", PORTAL_REQUEST}, {"zwolnienie sekcji krytycznej", PORTAL_RELEASE},
-                {"prośbę o pracę", JOB_REQUEST} };
+                {"prośbę o pracę", JOB_REQUEST}, {"nowe zlecenie", NEW_JOB} };
 
 const char *const tag2string( int tag )
 {
@@ -62,7 +62,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
 	pthread_mutex_unlock(&lamport_lock);
     pkt->src = rank;
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
-    debugLamport(lamport, "Wysyłam %s do %d\n", tag2string( tag), destination);
+    debugLamport(lamport, "Wysyłam %s do %d", tag2string( tag), destination);
     if (freepkt) free(pkt);
 }
 

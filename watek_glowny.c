@@ -3,7 +3,7 @@
 
 void mainLoop()
 {
-	for (int i = 0; i < size; i++) {
+	for (int i = 0; i < size_k; i++) {
         allLamports[i] = -1; // clear lamports
         for (int j = 0; j < 16; j++)
             jobLists[i][j] = 0; // clear job lists
@@ -11,6 +11,20 @@ void mainLoop()
     srandom(rank);
     int tag;
     int perc;
+
+	if (rank >= size_k) {
+		int nextJob = rank % size_s + 1;
+		while (1) {
+			sleep(random() % 3);
+		    println("Wysylam nowe zlecenie: %d", nextJob);
+		    packet_t *pkt = malloc(sizeof(packet_t));
+			pkt->data = nextJob;
+			for (int i = 0; i < size_k; i++) {
+				sendPacket(pkt, i, NEW_JOB);
+			}
+			nextJob += size_s;
+		}
+	}
 
     while (stan != InFinish) {
 	packet_t *pkt;
@@ -28,7 +42,7 @@ case InRun:
 				jobLists[rank][i] = jobs[i];
 			} 
 		    ackCount = 0;
-		    for (int i=0;i<=size-1;i++)
+		    for (int i=0;i<=size_k-1;i++)
 			if (i!=rank)
 			    sendPacket( pkt, i, JOB_REQUEST);
 		    free(pkt);
@@ -38,14 +52,14 @@ break;
 case InWantJob:
 		debug("Uzgadniam zlecenia");
 		int knownLists = 0;
-		for (int i = 0; i < size; i++) if (allLamports[i] != -1) knownLists++;
-		if (knownLists == size) {
+		for (int i = 0; i < size_k; i++) if (allLamports[i] != -1) knownLists++;
+		if (knownLists == size_k) {
 			int myJob = -1;
 			debugLamport(lamport, "Znam listy wszystkich procesów");
 			debugLamport(lamport, "%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
-			for (int k = 0; k < size; k++) {
+			for (int k = 0; k < size_k; k++) {
 				int minLamportId = rank;
-				for (int i = 0; i < size; i++) {
+				for (int i = 0; i < size_k; i++) {
 					if (jobLists[i][0] == 0)
 						continue;
 					if (jobLists[minLamportId][0] == 0				// in case of empty list, force to check next
@@ -56,7 +70,7 @@ case InWantJob:
 				if (jobLists[minLamportId][0] == 0) {				// nikt już nie ma zleceń
 					// Reset allLamports & jobLists
 					// debug("Nikt nie ma już zleceń");
-					for (int i = 0; i < size; i++) {
+					for (int i = 0; i < size_k; i++) {
 						allLamports[i] = -1;
 						for (int j = 0; j < 16; j++)
 							jobLists[i][j] = 0;
@@ -69,7 +83,7 @@ case InWantJob:
 						myJob = job;
 					// println("%d ma zlecenie %d", minLamportId, job);
 					// Usunięcie zlecenia job ze wszystkich list
-					for (int i = 0; i < size; i++) {
+					for (int i = 0; i < size_k; i++) {
 						for (int j = 0; j < 16; j++) {
 							if (jobLists[i][j] == job) {
 								// move all elements to the left
@@ -107,21 +121,21 @@ case InRequestPortal:
 		pkt->data = perc;
 		ackCount = 0;
 		changeState( InWantPortal );
-		for (int i=0;i<=size-1;i++)
+		for (int i = 0; i <= size_k - size_p; i++)
 		if (i!=rank)
 			sendPacket( pkt, i, PORTAL_REQUEST);
 		free(pkt);
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; i < size_k; i++) {
 			allLamports[i] = -1; // clear lamports
 			for (int j = 0; j < 16; j++)
 				jobLists[i][j] = 0; // clear job lists
 		}
 break;
 case InWantPortal:
-		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
+		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - 1)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
-		if ( ackCount == size - 1) 
+		if ( ackCount == size_k - 1) 
 		    changeState(InSection);
 		break;
 	    case InSection:
@@ -134,7 +148,7 @@ case InWantPortal:
 		    debug("Zmieniam stan na wysyłanie");
 		    pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
-		    for (int i=0;i<=size-1;i++)
+		    for (int i=0;i<=size_k-1;i++)
 			if (i!=rank)
 			    sendPacket( pkt, i, PORTAL_RELEASE);
 		    changeState( InRun );

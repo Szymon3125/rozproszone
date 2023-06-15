@@ -8,6 +8,11 @@ void *startKomWatek(void *ptr)
     int is_message = FALSE;
     packet_t pakiet;
     /* Obrazuje pętlę odbierającą pakiety o różnych typach */
+    
+    if (rank >= size_k) {
+        return NULL;
+    }
+
     while ( stan!=InFinish ) {
 	debug("czekam na recv");
     MPI_Recv( &pakiet, 1, MPI_PAKIET_T, MPI_ANY_SOURCE, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
