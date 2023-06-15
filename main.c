@@ -14,6 +14,9 @@
 int rank, size;
 int ackCount = 0;
 int lamport = 0;
+int jobs[100] = {1, 2, 3};
+int jobCount = 3;
+
 pthread_mutex_t lamport_lock;
 /* 
  * Każdy proces ma dwa wątki - główny i komunikacyjny

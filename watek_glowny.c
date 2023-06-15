@@ -16,26 +16,36 @@ void mainLoop()
 			// lamport++;
 			// pthread_mutex_unlock(&lamport_lock);
 		    // debug("Perc: %d", perc);
-		    printlnLamport(lamport, "Ubiegam się o sekcję krytyczną")
+		    printlnLamport(lamport, "Ubiegam się o pracę")
 		    debug("Zmieniam stan na wysyłanie");
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
+			for (int i=0;i<=min(jobCount, 16);i++) { pkt->jobs[i] = jobs[i]; } // sending max 16 jobs i want to do
 		    ackCount = 0;
-		    changeState( InWant );
+		    changeState( InWantJob );
+		    for (int i=0;i<=size-1;i++)
+			if (i!=rank)
+			    sendPacket( pkt, i, JOB_REQUEST);
+		    free(pkt);
+		}
+		debug("Skończyłem myśleć");
+		break;
+		case InWantJob:
+		debug("Chcę pracować");
+		// TODO: warunek na pracę - zgoda od wszystkich pozostałych które zadanie mogę wykonać
+		if ( 0 ) {
+		    printlnLamport(lamport, "Ubiegam się o portal")
+		    packet_t *pkt = malloc(sizeof(packet_t));
+		    pkt->data = perc;
+		    ackCount = 0;
+		    changeState( InWantPortal );
 		    for (int i=0;i<=size-1;i++)
 			if (i!=rank)
 			    sendPacket( pkt, i, PORTAL_REQUEST);
-					   // w VI naciśnij ctrl-] na nazwie funkcji, ctrl+^ żeby wrócić
-					   // :w żeby zapisać, jeżeli narzeka że w pliku są zmiany
-					   // ewentualnie wciśnij ctrl+w ] (trzymasz ctrl i potem najpierw w, potem ]
-					   // między okienkami skaczesz ctrl+w i strzałki, albo ctrl+ww
-					   // okienko zamyka się :q
-					   // ZOB. regułę tags: w Makefile (naciśnij gf gdy kursor jest na nazwie pliku)
 		    free(pkt);
-		} // a skoro już jesteśmy przy komendach vi, najedź kursorem na } i wciśnij %  (niestety głupieje przy komentarzach :( )
-		debug("Skończyłem myśleć");
+		}
 		break;
-	    case InWant:
+	    case InWantPortal:
 		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size - 1)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
