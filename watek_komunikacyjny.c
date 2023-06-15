@@ -32,7 +32,7 @@ void *startKomWatek(void *ptr)
                 debug("Dostałem PORTAL_ACK od %d, mam już %d", status.MPI_SOURCE, ackCount);
 	    break;
         case PORTAL_RELEASE:
-            if (stan == InWantPortal) changeState(InRun);
+            if (stan == InWantPortal) changeState(InRequestPortal);
             ackCount = 0;
         break;
         case JOB_REQUEST:

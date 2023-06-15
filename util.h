@@ -30,7 +30,7 @@ void inicjuj_typ_pakietu();
 /* wysyłanie pakietu, skrót: wskaźnik do pakietu (0 oznacza stwórz pusty pakiet), do kogo, z jakim typem */
 void sendPacket(packet_t *pkt, int destination, int tag);
 
-typedef enum {InRun, InMonitor, InWantJob, InWantPortal, InSection, InFinish} state_t;
+typedef enum {InRun, InMonitor, InWantJob, InRequestPortal, InWantPortal, InSection, InFinish} state_t;
 extern state_t stan;
 extern pthread_mutex_t stateMut;
 /* zmiana stanu, obwarowana muteksem */

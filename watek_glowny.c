@@ -13,6 +13,7 @@ void mainLoop()
     int perc;
 
     while (stan != InFinish) {
+	packet_t *pkt;
 	switch (stan) {
 case InRun: 
 		perc = random()%100;
@@ -35,7 +36,7 @@ case InRun:
 		debug("Skończyłem myśleć");
 break;
 case InWantJob:
-		debug("Chcę pracować");
+		debug("Uzgadniam zlecenia");
 		int knownLists = 0;
 		for (int i = 0; i < size; i++) if (allLamports[i] != -1) knownLists++;
 		if (knownLists == size) {
@@ -53,42 +54,67 @@ case InWantJob:
 							minLamportId = i;
 				}
 				if (jobLists[minLamportId][0] == 0) {				// nikt już nie ma zleceń
-					// TODO: reset allLamports & jobLists
+					// Reset allLamports & jobLists
+					// debug("Nikt nie ma już zleceń");
+					for (int i = 0; i < size; i++) {
+						allLamports[i] = -1;
+						for (int j = 0; j < 16; j++)
+							jobLists[i][j] = 0;
+					}
+					changeState( InRun );
 					break;
 				} else {
+					int job = jobLists[minLamportId][0];
 					if (rank == minLamportId)
-						myJob = jobLists[minLamportId][0];
-					
-					// TODO: usunąć zlecenie jobLists[minLamportId][0] ze wszystkich list
+						myJob = job;
+					// println("%d ma zlecenie %d", minLamportId, job);
+					// Usunięcie zlecenia job ze wszystkich list
+					for (int i = 0; i < size; i++) {
+						for (int j = 0; j < 16; j++) {
+							if (jobLists[i][j] == job) {
+								// move all elements to the left
+								for (int k = j; k < 15; k++)
+									jobLists[i][k] = jobLists[i][k + 1];
+								break;
+							}
+						}
+					}
+					// debug("%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+					for (int i = 0; i < jobCount; i++) {
+						if (jobs[i] == job)
+							for (int j = i; j < jobCount + 1; j++)
+								jobs[j] = jobs[j + 1];
+					}
+					jobCount--;
 					for (int i = 0; i < 16; i++) {
 						jobLists[minLamportId][i] = 0;
 					}
+					// debug("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5])
 				}
 			}
 			if (myJob == -1) {
-				debugLamport(lamport, "Nie mam zleceń");
+				printlnLamport(lamport, "Nie mam zleceń");
 				changeState(InRun);
 			} else {
-				debugLamport(lamport, "Mam zlecenie %d", myJob);
-
-				printlnLamport(lamport, "Ubiegam się o portal");
-				packet_t *pkt = malloc(sizeof(packet_t));
-				pkt->data = perc;
-				ackCount = 0;
-				changeState( InWantPortal );
-				for (int i=0;i<=size-1;i++)
-				if (i!=rank)
-					sendPacket( pkt, i, PORTAL_REQUEST);
-				free(pkt);
-				for (int i = 0; i < size; i++) {
-					allLamports[i] = -1; // clear lamports
-					for (int j = 0; j < 16; j++)
-						jobLists[i][j] = 0; // clear job lists
-				}
+				printlnLamport(lamport, "Mam zlecenie %d", myJob);
+				changeState(InRequestPortal);
 			}
 		}
-		if ( 0 ) {
-		    
+break;
+case InRequestPortal:
+		printlnLamport(lamport, "Ubiegam się o portal");
+		pkt = malloc(sizeof(packet_t));
+		pkt->data = perc;
+		ackCount = 0;
+		changeState( InWantPortal );
+		for (int i=0;i<=size-1;i++)
+		if (i!=rank)
+			sendPacket( pkt, i, PORTAL_REQUEST);
+		free(pkt);
+		for (int i = 0; i < size; i++) {
+			allLamports[i] = -1; // clear lamports
+			for (int j = 0; j < 16; j++)
+				jobLists[i][j] = 0; // clear job lists
 		}
 break;
 case InWantPortal:
@@ -106,7 +132,7 @@ case InWantPortal:
 		    // debug("Perc: %d", perc);
 		    printlnLamport(lamport, "Wychodzę z sekcji krytyczneh")
 		    debug("Zmieniam stan na wysyłanie");
-		    packet_t *pkt = malloc(sizeof(packet_t));
+		    pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
 		    for (int i=0;i<=size-1;i++)
 			if (i!=rank)
