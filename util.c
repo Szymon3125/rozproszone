@@ -19,7 +19,8 @@ struct tagNames_t{
     const char *name;
     int tag;
 } tagNames[] = { { "pakiet aplikacyjny", APP_PKT }, { "finish", FINISH}, 
-                { "potwierdzenie", PORTAL_ACK}, {"prośbę o sekcję krytyczną", PORTAL_REQUEST}, {"zwolnienie sekcji krytycznej", PORTAL_RELEASE} };
+                { "potwierdzenie", PORTAL_ACK}, {"prośbę o sekcję krytyczną", PORTAL_REQUEST}, {"zwolnienie sekcji krytycznej", PORTAL_RELEASE},
+                {"prośbę o pracę", JOB_REQUEST}, {"nowe zlecenie", NEW_JOB} };
 
 const char *const tag2string( int tag )
 {
@@ -37,13 +38,14 @@ void inicjuj_typ_pakietu()
        brzydzimy się czymś w rodzaju MPI_Send(&typ, sizeof(pakiet_t), MPI_BYTE....
     */
     /* sklejone z stackoverflow */
-    int       blocklengths[NITEMS] = {1,1,1};
-    MPI_Datatype typy[NITEMS] = {MPI_INT, MPI_INT, MPI_INT};
+    int       blocklengths[NITEMS] = {1,1,16,1};
+    MPI_Datatype typy[NITEMS] = {MPI_INT, MPI_INT, MPI_INT, MPI_INT};
 
     MPI_Aint     offsets[NITEMS]; 
     offsets[0] = offsetof(packet_t, ts);
     offsets[1] = offsetof(packet_t, src);
-    offsets[2] = offsetof(packet_t, data);
+    offsets[2] = offsetof(packet_t, jobs);
+    offsets[3] = offsetof(packet_t, data);
 
     MPI_Type_create_struct(NITEMS, blocklengths, offsets, typy, &MPI_PAKIET_T);
 
@@ -60,7 +62,7 @@ void sendPacket(packet_t *pkt, int destination, int tag)
 	pthread_mutex_unlock(&lamport_lock);
     pkt->src = rank;
     MPI_Send( pkt, 1, MPI_PAKIET_T, destination, tag, MPI_COMM_WORLD);
-    debugLamport(lamport, "Wysyłam %s do %d\n", tag2string( tag), destination);
+    debugLamport(lamport, "Wysyłam %s do %d", tag2string( tag), destination);
     if (freepkt) free(pkt);
 }
 
@@ -74,3 +76,6 @@ void changeState( state_t newState )
     stan = newState;
     pthread_mutex_unlock( &stateMut );
 }
+
+int min(int a, int b) { return (a < b) ? a : b; }
+int max(int a, int b) { return (a > b) ? a : b; }

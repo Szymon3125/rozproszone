@@ -18,13 +18,23 @@
 #define ROOT 0
 
 /* tutaj TYLKO zapowiedzi - definicje w main.c */
-extern int rank;
-extern int size;
+extern int rank;        // id procesu
+extern int size;        // ilosc procesow
+extern int size_k;      // ilosc krasnali
+extern int size_s;      // ilosc skansenow
+extern int size_p;      // ilosc portali
+
 extern int ackCount;
 extern pthread_t threadKom;
 extern int lamport;
 extern pthread_mutex_t lamport_lock;
-
+extern pthread_mutex_t jobs_lock;
+extern int jobs[100];
+extern int jobCount;
+extern int jobLists[16][16];
+extern int jobListsBuffer[16][16];
+extern int allLamports[16];
+extern int allLamportsBuffer[16];
 
 
 
