@@ -41,39 +41,44 @@ void *startKomWatek(void *ptr)
             ackCount = 0;
         break;
         case JOB_REQUEST:
-            if (stan != InWantJob && stan != InRun) {
-                // (nietestowane, może coś napsuć):
-                // Jeśli w innym stanie niż oczekujący na zlecenia, początkowym, odpowiedz pustym pakietem
-                // packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
-                // for (int i = 0; i < 16; i++) pkt->jobs[i] = 0;
-                // sendPacket(pkt, pakiet.src, JOB_REQUEST);
-                // free(pkt);
-                break;
-            }
-
+            println("\t\t\ttrying to lock jobs")
+			pthread_mutex_lock(&jobs_lock);
+			println("\t\t\tjobs locked for receiving JOB_REQUEST");
+            println("\t\t\t 1")
             if (allLamports[pakiet.src] != -1) {
-                debugLamport(lamport, "Dostałem KOLEJNY RAZ prośbę o pracę od %d z zegarem %d, mam już lamporta tego procesu: %d, zapisuję do bufora", pakiet.src, pakiet.ts, allLamports[pakiet.src]);
+                println("\t\t\t 2")
+                printlnLamport(lamport, "Dostałem KOLEJNY RAZ prośbę o pracę od %d z zegarem %d, mam już lamporta tego procesu: %d, zapisuję do bufora", pakiet.src, pakiet.ts, allLamports[pakiet.src]);
                 if (allLamportsBuffer[pakiet.src] != -1) println("ERROR: Przepełnienie bufora, proces %d prosi o pracę po raz trzeci!", pakiet.src);
                 allLamportsBuffer[pakiet.src] = pakiet.ts;
                 for (int i = 0; i < 16; i++)
                     jobListsBuffer[pakiet.src][i] = pakiet.jobs[i];
+                println("\t\t\t 3")
             } else {
+                println("\t\t\t 4")
                 allLamports[pakiet.src] = pakiet.ts;
                 for (int i = 0; i < 16; i++) { jobLists[pakiet.src][i] = pakiet.jobs[i]; }
-                debugLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
+                printlnLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
+                println("\t\t\t 5")
             }
+            println("\t\t\tunlocked jobs")
+            pthread_mutex_unlock(&jobs_lock);
         case NEW_JOB:
-            debug("Dostałem nowe zlecenie: %d", pakiet.data);
+            println("Dostałem nowe zlecenie: %d", pakiet.data);
+            println("\t\t\ttrying to lock jobs")
+			pthread_mutex_lock(&jobs_lock);
+			println("\t\t\tjobs locked for receiving NEW_JOB");
             int alreadyAssigned = 0;
             for (int i = 0; i < 100; i++) if (jobsTaken[i] == pakiet.data) { alreadyAssigned = 1; break; }
             if (!alreadyAssigned) {
-                pthread_mutex_lock(&jobs_lock);
                 jobs[jobCount] = pakiet.data;
                 jobCount++;
-			    pthread_mutex_unlock(&jobs_lock);
+                println("Teraz mam %d zleceń: [%d, %d, %d, %d, %d, %d, %d, %d, %d %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5], jobs[6], jobs[7] ,jobs[8], jobs[9]);
+
             } else {
                 println("Dostałem zlecenie %d, ale ono zostało już wykonane", pakiet.data);
             }
+            println("\t\t\tunlocked jobs")
+			pthread_mutex_unlock(&jobs_lock);
         break;
         default:
 	    break;
