@@ -55,10 +55,12 @@ void *startKomWatek(void *ptr)
             }
             pthread_mutex_unlock(&jobs_lock);
         case NEW_JOB:
+            // ! There is a bug that causes receiving some NEW_JOB messages for unknown reasons (they shouldn't have been sent by skansens).
+            // ! Those messages are treated them as normal jobs. There is an additional condition to prevent adding them multiple times
             debug("Dostałem nowe zlecenie: %d", pakiet.data);
 			pthread_mutex_lock(&jobs_lock);
             int alreadyAssigned = 0;
-            for (int i = 0; i < 100; i++) if (jobsTaken[i] == pakiet.data) { alreadyAssigned = 1; break; }
+            for (int i = 0; i < 100; i++) if (jobsTaken[i] == pakiet.data || jobs[i] == pakiet.data) { alreadyAssigned = 1; break; }
             if (!alreadyAssigned) {
                 jobs[jobCount] = pakiet.data;
                 jobCount++;

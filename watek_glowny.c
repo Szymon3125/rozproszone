@@ -115,14 +115,14 @@ case InWantJob:;
 							debug("Usuwam zlecenie %d.", jobs[i]);
 							for (int j = i; j < jobCount + 1; j++)
 								jobs[j] = jobs[j + 1];
+							jobCount--;
 						}
 					}
-					jobCount--;
 					// pthread_mutex_unlock(&jobs_lock);
 					for (int i = 0; i < 16; i++) {
 						jobLists[minLamportId][i] = 0;
 					}
-					debug("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]);
+					debug("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5], jobs[6], jobs[7], jobs[8]);
 				}
 				pthread_mutex_unlock(&jobs_lock);
 			}
