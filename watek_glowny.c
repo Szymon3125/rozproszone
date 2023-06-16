@@ -3,10 +3,14 @@
 
 void mainLoop()
 {
+	// Clear allLamports & jobLists
 	for (int i = 0; i < size_k; i++) {
-        allLamports[i] = -1; // clear lamports
-        for (int j = 0; j < 16; j++)
-            jobLists[i][j] = 0; // clear job lists
+        allLamports[i] = -1;
+		allLamportsBuffer[i] = -1;
+        for (int j = 0; j < 16; j++) {
+            jobLists[i][j] = 0;
+			jobListsBuffer[i][j] = 0;
+		}
     }
     srandom(rank);
     int tag;
@@ -45,8 +49,10 @@ case InRun:
 			pthread_mutex_unlock(&jobs_lock);
 		    ackCount = 0;
 		    for (int i=0;i<=size_k-1;i++)
-			if (i!=rank)
+			if (i!=rank) {
+				println("Wysyłam JOB_REQUEST do %d", i);
 			    sendPacket( pkt, i, JOB_REQUEST);
+			}
 		    free(pkt);
 		}
 		debug("Skończyłem myśleć");
@@ -123,8 +129,26 @@ case InWantJob:
 				for (int j = 0; j < 16; j++)
 					jobLists[i][j] = 0;
 			}
-			// TODO: copy the new job lists from buffer (if any)
-			// TODO: send the empty JOB_REQUEST to those who sent new job lists into the buffer
+			// Read new job lists from buffer (if any)
+			println("Czyszczę bufor");
+			for (int i = 0; i < size_k; i++) {
+				allLamports[i] = allLamportsBuffer[i];
+				allLamportsBuffer[i] = -1;
+				for (int j = 0; j < 16; j++) {
+					jobLists[i][j] = jobListsBuffer[i][j];
+					jobListsBuffer[i][j] = 0;
+				}
+			}
+			// Send the empty JOB_REQUEST to those who sent new job lists into the buffer
+			for (int i = 0; i < size_k; i++) {
+				if (allLamports[i] != -1) {
+					packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
+					for (int j = 0; j < 16; j++) pkt->jobs[j] = 0;
+					println("Wysyłam puste JOB_REQUEST do %d (na podstawie listy skopiowanej z bufora)", i)
+					sendPacket(pkt, i, JOB_REQUEST);
+					free(pkt);
+				}
+			}
 		}
 break;
 case InRequestPortal:

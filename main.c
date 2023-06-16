@@ -23,9 +23,10 @@ int lamport = 0;
 int jobs[100] = {0};
 int jobCount = 0;
 
-int askedForJobs[16] = {0};
 int jobLists[16][16];
+int jobListsBuffer[16][16];
 int allLamports[16];
+int allLamportsBuffer[16];
 
 pthread_mutex_t lamport_lock;
 pthread_mutex_t jobs_lock;
