@@ -1,6 +1,8 @@
 #include "main.h"
 #include "watek_glowny.h"
 
+int myJob = -1;
+
 void mainLoop()
 {
 	// Clear allLamports & jobLists
@@ -41,9 +43,7 @@ case InRun:
 			allLamports[rank] = lamport; // ? possible race conditions between sendPacket ?
 		    packet_t *pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
-			println("\t\t\ttrying to lock jobs")
 			pthread_mutex_lock(&jobs_lock);
-			println("\t\t\tjobs locked");
 			for (int i = 0; i < 16; i++) {
 				pkt->jobs[i] = jobs[i];
 				jobLists[rank][i] = jobs[i];
@@ -61,15 +61,16 @@ case InRun:
 break;
 case InWantJob:;
 		int knownLists = 0;
-		for (int i = 0; i < size_k; i++) if (allLamports[i] != -1) knownLists++; else println("Czekam na listę od %d", i);
-		println("Uzgadniam zlecenia %d/%d", knownLists, size_k);
+		for (int i = 0; i < size_k; i++) {
+			if (allLamports[i] != -1) knownLists++;
+			// else println("Czekam na listę od %d", i);
+		}
+		debug("Uzgadniam zlecenia %d/%d", knownLists, size_k);
 		if (knownLists == size_k) {
-			int myJob = -1;
-			println("\t\t\ttrying to lock jobs")
+			myJob = -1;
 			pthread_mutex_lock(&jobs_lock);
-			println("\t\t\tjobs locked for calculating wich tas is mine");
-			printlnLamport(lamport, "Znam listy wszystkich procesów");
-			printlnLamport(lamport, "%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+			debugLamport(lamport, "Znam listy wszystkich procesów");
+			debugLamport(lamport, "%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
 			for (int k = 0; k < size_k; k++) {
 				int minLamportId = rank;
 				for (int i = 0; i < size_k; i++) {
@@ -111,7 +112,7 @@ case InWantJob:;
 					// pthread_mutex_lock(&jobs_lock);
 					for (int i = 0; i < jobCount; i++) {
 						if (jobs[i] == job) {
-							println("Usuwam zlecenie %d.", jobs[i]);
+							debug("Usuwam zlecenie %d.", jobs[i]);
 							for (int j = i; j < jobCount + 1; j++)
 								jobs[j] = jobs[j + 1];
 						}
@@ -121,9 +122,8 @@ case InWantJob:;
 					for (int i = 0; i < 16; i++) {
 						jobLists[minLamportId][i] = 0;
 					}
-					println("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]);
+					debug("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5]);
 				}
-				println("\t\t\tunlocked jobs")
 				pthread_mutex_unlock(&jobs_lock);
 			}
 			if (myJob == -1) {
@@ -140,7 +140,7 @@ case InWantJob:;
 					jobLists[i][j] = 0;
 			}
 			// Read new job lists from buffer (if any)
-			println("Czyszczę bufor");
+			debug("Czyszczę bufor");
 			for (int i = 0; i < size_k; i++) {
 				allLamports[i] = allLamportsBuffer[i];
 				allLamportsBuffer[i] = -1;
@@ -149,9 +149,9 @@ case InWantJob:;
 					jobListsBuffer[i][j] = 0;
 				}
 			}
-			printlnLamport(lamport, "nowy stan list (z bufora) %d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+			debugLamport(lamport, "nowy stan list (z bufora) %d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
 			pthread_mutex_unlock(&jobs_lock);
-			// Send the empty JOB_REQUEST to those who sent new job lists into the buffer
+			// Send the empty JOB_REQUEST to those who sent new job lists into the buffer (untested may cause issues)
 			// for (int i = 0; i < size_k; i++) {
 			// 	if (allLamports[i] != -1) {
 			// 		packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
@@ -180,15 +180,15 @@ case InWantPortal:
 		// bo aktywne czekanie jest BUE
 		if ( ackCount >= size_k - size_p) 
 		    changeState(InSection);
-		break;
-	    case InSection:
+break;
+case InSection:
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		//printlnLamport(lamport, "Jestem w sekcji krytycznej")
-		printlnLamport(lamport, "Wykonuję zlecenie.");
+		printlnLamport(lamport, "Wykonuję zlecenie %d", myJob);
 		    sleep(5);
 		//if ( perc < 25 ) {
 		    // debug("Perc: %d", perc);
-		    printlnLamport(lamport, "Wychodzę z sekcji krytycznej")
+		    printlnLamport(lamport, "Skończyłem wykonywać zlecenie %d:", myJob)
 		    debug("Zmieniam stan na wysyłanie");
 		    pkt = malloc(sizeof(packet_t));
 		    pkt->data = perc;
