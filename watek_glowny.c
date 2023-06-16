@@ -50,7 +50,7 @@ case InRun:
 		    ackCount = 0;
 		    for (int i=0;i<=size_k-1;i++)
 			if (i!=rank) {
-				println("Wysyłam JOB_REQUEST do %d", i);
+				// println("Wysyłam JOB_REQUEST do %d", i);
 			    sendPacket( pkt, i, JOB_REQUEST);
 			}
 		    free(pkt);
@@ -63,8 +63,9 @@ case InWantJob:
 		for (int i = 0; i < size_k; i++) if (allLamports[i] != -1) knownLists++;
 		if (knownLists == size_k) {
 			int myJob = -1;
-			debugLamport(lamport, "Znam listy wszystkich procesów");
-			debugLamport(lamport, "%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+			pthread_mutex_lock(&jobs_lock);
+			printlnLamport(lamport, "Znam listy wszystkich procesów");
+			printlnLamport(lamport, "%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
 			for (int k = 0; k < size_k; k++) {
 				int minLamportId = rank;
 				for (int i = 0; i < size_k; i++) {
@@ -87,6 +88,7 @@ case InWantJob:
 					break;
 				} else {
 					int job = jobLists[minLamportId][0];
+					for (int i = 0; i < 100; i++) if (jobsTaken[i] != 0) { jobsTaken[i] = job; break; }
 					if (rank == minLamportId)
 						myJob = job;
 					// println("%d ma zlecenie %d", minLamportId, job);
@@ -102,19 +104,22 @@ case InWantJob:
 						}
 					}
 					// debug("%d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
-					pthread_mutex_lock(&jobs_lock);
+					// pthread_mutex_lock(&jobs_lock);
 					for (int i = 0; i < jobCount; i++) {
-						if (jobs[i] == job)
+						if (jobs[i] == job) {
+							println("Usuwam zlecenie %d.", jobs[i]);
 							for (int j = i; j < jobCount + 1; j++)
 								jobs[j] = jobs[j + 1];
+						}
 					}
 					jobCount--;
-					pthread_mutex_unlock(&jobs_lock);
+					// pthread_mutex_unlock(&jobs_lock);
 					for (int i = 0; i < 16; i++) {
 						jobLists[minLamportId][i] = 0;
 					}
 					// debug("%d pozostałych zleceń o których wiem: [%d, %d, %d, %d, %d, %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5])
 				}
+				pthread_mutex_unlock(&jobs_lock);
 			}
 			if (myJob == -1) {
 				printlnLamport(lamport, "Nie mam zleceń");
@@ -139,16 +144,18 @@ case InWantJob:
 					jobListsBuffer[i][j] = 0;
 				}
 			}
+			printlnLamport(lamport, "nowy stan list (z bufora) %d [%d, %d, %d], %d [%d, %d, %d]", allLamports[0], jobLists[0][0], jobLists[0][1], jobLists[0][2], allLamports[1], jobLists[1][0], jobLists[1][1], jobLists[1][2]);
+			pthread_mutex_unlock(&jobs_lock);
 			// Send the empty JOB_REQUEST to those who sent new job lists into the buffer
-			for (int i = 0; i < size_k; i++) {
-				if (allLamports[i] != -1) {
-					packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
-					for (int j = 0; j < 16; j++) pkt->jobs[j] = 0;
-					println("Wysyłam puste JOB_REQUEST do %d (na podstawie listy skopiowanej z bufora)", i)
-					sendPacket(pkt, i, JOB_REQUEST);
-					free(pkt);
-				}
-			}
+			// for (int i = 0; i < size_k; i++) {
+			// 	if (allLamports[i] != -1) {
+			// 		packet_t* pkt = (packet_t*)malloc(sizeof(packet_t));
+			// 		for (int j = 0; j < 16; j++) pkt->jobs[j] = 0;
+			// 		println("Wysyłam puste JOB_REQUEST do %d (na podstawie listy skopiowanej z bufora)", i)
+			// 		sendPacket(pkt, i, JOB_REQUEST);
+			// 		free(pkt);
+			// 	}
+			// }
 		}
 break;
 case InRequestPortal:
@@ -161,14 +168,9 @@ case InRequestPortal:
 			if (i!=rank)
 				sendPacket( pkt, i, PORTAL_REQUEST);
 		free(pkt);
-		for (int i = 0; i < size_k; i++) {
-			allLamports[i] = -1; // clear lamports
-			for (int j = 0; j < 16; j++)
-				jobLists[i][j] = 0; // clear job lists
-		}
 break;
 case InWantPortal:
-		printlnLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - size_p)
+		debugLamport(lamport, "Czekam na wejście do sekcji krytycznej %d/%d", ackCount, size_k - size_p)
 		// tutaj zapewne jakiś muteks albo zmienna warunkowa
 		// bo aktywne czekanie jest BUE
 		if ( ackCount >= size_k - size_p) 
@@ -195,6 +197,6 @@ break;
 default: 
 break;
             }
-        sleep(SEC_IN_STATE);
+        // sleep(SEC_IN_STATE);
     }
 }

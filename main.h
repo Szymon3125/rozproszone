@@ -35,6 +35,7 @@ extern int jobLists[16][16];
 extern int jobListsBuffer[16][16];
 extern int allLamports[16];
 extern int allLamportsBuffer[16];
+extern int jobsTaken[100];
 
 
 

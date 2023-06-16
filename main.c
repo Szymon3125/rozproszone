@@ -19,7 +19,7 @@ int size_s = 2;     // ilosc skansenow
 int size_p = 2;     // ilosc portali
 
 int ackCount = 0;
-int lamport = 0;
+int lamport = 50;
 int jobs[100] = {0};
 int jobCount = 0;
 
@@ -27,6 +27,7 @@ int jobLists[16][16];
 int jobListsBuffer[16][16];
 int allLamports[16];
 int allLamportsBuffer[16];
+int jobsTaken[100] = {0};
 
 pthread_mutex_t lamport_lock;
 pthread_mutex_t jobs_lock;

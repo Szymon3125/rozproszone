@@ -52,7 +52,7 @@ void *startKomWatek(void *ptr)
             }
 
             if (allLamports[pakiet.src] != -1) {
-                printlnLamport(lamport, "Dostałem KOLEJNY RAZ prośbę o pracę od %d z zegarem %d, mam już lamporta tego procesu: %d, zapisuję do bufora", pakiet.src, pakiet.ts, allLamports[pakiet.src]);
+                debugLamport(lamport, "Dostałem KOLEJNY RAZ prośbę o pracę od %d z zegarem %d, mam już lamporta tego procesu: %d, zapisuję do bufora", pakiet.src, pakiet.ts, allLamports[pakiet.src]);
                 if (allLamportsBuffer[pakiet.src] != -1) println("ERROR: Przepełnienie bufora, proces %d prosi o pracę po raz trzeci!", pakiet.src);
                 allLamportsBuffer[pakiet.src] = pakiet.ts;
                 for (int i = 0; i < 16; i++)
@@ -60,14 +60,20 @@ void *startKomWatek(void *ptr)
             } else {
                 allLamports[pakiet.src] = pakiet.ts;
                 for (int i = 0; i < 16; i++) { jobLists[pakiet.src][i] = pakiet.jobs[i]; }
-                printlnLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
+                debugLamport(lamport, "%d pyta o zlecenia [%d, %d, %d, %d, %d, %d, ...] (z zegarem %d)", pakiet.src, pakiet.jobs[0], pakiet.jobs[1], pakiet.jobs[2], pakiet.jobs[3], pakiet.jobs[4], pakiet.jobs[5], pakiet.ts);
             }
         case NEW_JOB:
             debug("Dostałem nowe zlecenie: %d", pakiet.data);
-            pthread_mutex_lock(&jobs_lock);
-            jobs[jobCount] = pakiet.data;
-            jobCount++;
-			pthread_mutex_unlock(&jobs_lock);
+            int alreadyAssigned = 0;
+            for (int i = 0; i < 100; i++) if (jobsTaken[i] == pakiet.data) { alreadyAssigned = 1; break; }
+            if (!alreadyAssigned) {
+                pthread_mutex_lock(&jobs_lock);
+                jobs[jobCount] = pakiet.data;
+                jobCount++;
+			    pthread_mutex_unlock(&jobs_lock);
+            } else {
+                println("Dostałem zlecenie %d, ale ono zostało już wykonane", pakiet.data);
+            }
         break;
         default:
 	    break;
