@@ -67,7 +67,7 @@ void *startKomWatek(void *ptr)
                 debug("Dostałem zlecenie, teraz mam %d zleceń: [%d, %d, %d, %d, %d, %d, %d, %d, %d %d, ...]", jobCount, jobs[0], jobs[1], jobs[2], jobs[3], jobs[4], jobs[5], jobs[6], jobs[7] ,jobs[8], jobs[9]);
 
             } else {
-                println("Dostałem zlecenie %d, ale ono zostało już wykonane", pakiet.data);
+                debug("Dostałem zlecenie %d, ale ono zostało już wykonane", pakiet.data);
             }
 			pthread_mutex_unlock(&jobs_lock);
         break;
